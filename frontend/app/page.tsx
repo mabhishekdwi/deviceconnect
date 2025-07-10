@@ -193,28 +193,7 @@ export default function Home() {
           <p className="text-lg text-gray-600">Real-time Android device detection using ADB</p>
         </div>
 
-        {/* Connection Status */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              <span className="font-medium">
-                {isConnected ? 'Connected to local server' : 'Disconnected from local server'}
-              </span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className={`w-3 h-3 rounded-full ${adbAvailable ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              <span className="font-medium">
-                {adbAvailable ? 'ADB Available' : 'ADB Not Available'}
-              </span>
-            </div>
-          </div>
-          {lastUpdate && (
-            <p className="text-sm text-gray-500 mt-2">
-              Last updated: {formatTimestamp(lastUpdate)}
-            </p>
-          )}
-        </div>
+      
 
         {/* Error Display */}
         {error && (
@@ -269,17 +248,7 @@ export default function Home() {
         <ScreenshotViewer />
 
         {/* Instructions */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mt-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-3">How to connect devices:</h3>
-          <ol className="list-decimal list-inside space-y-2 text-blue-800">
-            <li>Enable Developer Options on your Android device</li>
-            <li>Enable USB Debugging in Developer Options</li>
-            <li>Connect your device via USB cable</li>
-            <li>Allow USB debugging when prompted on your device</li>
-            <li>Make sure ADB is installed and in your system PATH</li>
-            <li>Start the local server: <code className="bg-blue-100 px-2 py-1 rounded">npm run dev</code></li>
-          </ol>
-        </div>
+
       </div>
     </div>
   )
