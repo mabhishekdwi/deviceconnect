@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { io, Socket } from 'socket.io-client'
 import { Smartphone, Wifi, WifiOff, AlertCircle, CheckCircle, Clock } from 'lucide-react'
 
@@ -20,13 +20,40 @@ interface DeviceData {
 function ScreenshotViewer() {
   const [timestamp, setTimestamp] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [xpath, setXpath] = useState<string | null>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   const captureScreenshot = () => {
     setLoading(true);
     setTimestamp(Date.now());
+    setXpath(null);
   };
 
   const handleImageLoad = () => setLoading(false);
+
+  const handleImageClick = async (e: React.MouseEvent<HTMLImageElement>) => {
+    const img = imgRef.current;
+    if (!img) return;
+    const rect = img.getBoundingClientRect();
+    const x = Math.round(e.clientX - rect.left);
+    const y = Math.round(e.clientY - rect.top);
+    setXpath('Locating...');
+    try {
+      const res = await fetch('http://localhost:3001/api/locator', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ x, y }),
+      });
+      const data = await res.json();
+      if (data.xpath) {
+        setXpath(data.xpath);
+      } else {
+        setXpath('No element found at this position.');
+      }
+    } catch (err) {
+      setXpath('Error locating element.');
+    }
+  };
 
   return (
     <div className="my-8">
@@ -42,12 +69,19 @@ function ScreenshotViewer() {
       {loading && <div className="text-gray-500 mb-2">Capturing screenshot...</div>}
       {timestamp && (
         <img
+          ref={imgRef}
           src={`http://localhost:3001/api/screenshot?${timestamp}`}
           alt="Device Screenshot"
-          className="border rounded shadow max-w-full"
+          className="border rounded shadow max-w-full cursor-crosshair"
           style={{ maxHeight: 500 }}
           onLoad={handleImageLoad}
+          onClick={handleImageClick}
         />
+      )}
+      {xpath && (
+        <div className="mt-4 p-3 bg-gray-100 border rounded text-sm break-all">
+          <strong>XPath:</strong> {xpath}
+        </div>
       )}
     </div>
   );
