@@ -17,6 +17,42 @@ interface DeviceData {
   error?: string
 }
 
+function ScreenshotViewer() {
+  const [timestamp, setTimestamp] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const captureScreenshot = () => {
+    setLoading(true);
+    setTimestamp(Date.now());
+  };
+
+  const handleImageLoad = () => setLoading(false);
+
+  return (
+    <div className="my-8">
+      <h2 className="text-xl font-semibold mb-2">Device Screenshot</h2>
+      <div className="mb-2">
+        <button
+          onClick={captureScreenshot}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Capture Screenshot
+        </button>
+      </div>
+      {loading && <div className="text-gray-500 mb-2">Capturing screenshot...</div>}
+      {timestamp && (
+        <img
+          src={`http://localhost:3001/api/screenshot?${timestamp}`}
+          alt="Device Screenshot"
+          className="border rounded shadow max-w-full"
+          style={{ maxHeight: 500 }}
+          onLoad={handleImageLoad}
+        />
+      )}
+    </div>
+  );
+}
+
 export default function Home() {
   const [devices, setDevices] = useState<Device[]>([])
   const [adbAvailable, setAdbAvailable] = useState<boolean>(false)
@@ -173,6 +209,9 @@ export default function Home() {
             </div>
           )}
         </div>
+
+        {/* Screenshot Viewer */}
+        <ScreenshotViewer />
 
         {/* Instructions */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mt-6">

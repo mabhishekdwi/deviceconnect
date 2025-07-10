@@ -107,6 +107,18 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Endpoint to get a screenshot from the connected device
+app.get('/api/screenshot', (req, res) => {
+  exec('adb exec-out screencap -p', { encoding: 'buffer', maxBuffer: 5 * 1024 * 1024 }, (err, stdout) => {
+    if (err) {
+      console.error('Error capturing screenshot:', err);
+      return res.status(500).send('Error capturing screenshot');
+    }
+    res.set('Content-Type', 'image/png');
+    res.send(stdout);
+  });
+});
+
 // WebSocket connection handling
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
