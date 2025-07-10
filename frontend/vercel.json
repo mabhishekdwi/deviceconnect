@@ -5,6 +5,6 @@
   "installCommand": "npm install",
   "devCommand": "npm run dev",
   "env": {
-    "NEXT_PUBLIC_LOCAL_SERVER_URL": "@local-server-url"
+    "NEXT_PUBLIC_LOCAL_SERVER_URL": "http://localhost:3001"
   }
 } 
