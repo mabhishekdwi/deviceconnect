@@ -20,13 +20,13 @@ interface DeviceData {
 function ScreenshotViewer() {
   const [timestamp, setTimestamp] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  const [xpath, setXpath] = useState<string | null>(null);
+  const [xpaths, setXpaths] = useState<string[]>([]);
   const imgRef = useRef<HTMLImageElement>(null);
 
   const captureScreenshot = () => {
     setLoading(true);
     setTimestamp(Date.now());
-    setXpath(null);
+    setXpaths([]);
   };
 
   const handleImageLoad = () => setLoading(false);
@@ -37,7 +37,8 @@ function ScreenshotViewer() {
     const rect = img.getBoundingClientRect();
     const x = Math.round(e.clientX - rect.left);
     const y = Math.round(e.clientY - rect.top);
-    setXpath('Locating...');
+    setXpaths(prev => [...prev, 'Locating...']);
+    const idx = xpaths.length;
     try {
       const res = await fetch('http://localhost:3001/api/locator', {
         method: 'POST',
@@ -45,44 +46,55 @@ function ScreenshotViewer() {
         body: JSON.stringify({ x, y }),
       });
       const data = await res.json();
-      if (data.xpath) {
-        setXpath(data.xpath);
-      } else {
-        setXpath('No element found at this position.');
-      }
+      setXpaths(prev => prev.map((xp, i) => i === idx ? (data.xpath || 'No element found at this position.') : xp));
     } catch (err) {
-      setXpath('Error locating element.');
+      setXpaths(prev => prev.map((xp, i) => i === idx ? 'Error locating element.' : xp));
     }
   };
+
+  const handleClearXpaths = () => setXpaths([]);
 
   return (
     <div className="my-8">
       <h2 className="text-xl font-semibold mb-2">Device Screenshot</h2>
-      <div className="mb-2">
+      <div className="mb-2 flex flex-row gap-4 items-center">
         <button
           onClick={captureScreenshot}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           Capture Screenshot
         </button>
+        <button
+          onClick={handleClearXpaths}
+          className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+        >
+          Clear XPaths
+        </button>
+      </div>
+      <div className="flex flex-row items-start gap-6">
+        {timestamp && (
+          <img
+            ref={imgRef}
+            src={`http://localhost:3001/api/screenshot?${timestamp}`}
+            alt="Device Screenshot"
+            className="border rounded shadow max-w-full cursor-crosshair"
+            style={{ maxHeight: 500 }}
+            onLoad={handleImageLoad}
+            onClick={handleImageClick}
+          />
+        )}
+        {xpaths.length > 0 && (
+          <div className="p-3 bg-gray-100 border rounded text-sm break-all min-w-[200px] flex flex-col gap-2">
+            <strong>XPaths:</strong>
+            {xpaths.map((xp, i) => (
+              <div key={i} className="bg-white border rounded p-2 mb-1">
+                {xp}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       {loading && <div className="text-gray-500 mb-2">Capturing screenshot...</div>}
-      {timestamp && (
-        <img
-          ref={imgRef}
-          src={`http://localhost:3001/api/screenshot?${timestamp}`}
-          alt="Device Screenshot"
-          className="border rounded shadow max-w-full cursor-crosshair"
-          style={{ maxHeight: 500 }}
-          onLoad={handleImageLoad}
-          onClick={handleImageClick}
-        />
-      )}
-      {xpath && (
-        <div className="mt-4 p-3 bg-gray-100 border rounded text-sm break-all">
-          <strong>XPath:</strong> {xpath}
-        </div>
-      )}
     </div>
   );
 }

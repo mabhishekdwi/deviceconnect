@@ -11,15 +11,21 @@
     "test-setup": "node scripts/test-setup.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
     "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "node-cron": "^3.0.2",
     "socket.io": "^4.7.2",
-    "node-cron": "^3.0.2"
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-  "keywords": ["adb", "android", "device-detection", "vercel"],
+  "keywords": [
+    "adb",
+    "android",
+    "device-detection",
+    "vercel"
+  ],
   "author": "Your Name",
   "license": "MIT"
-} 
+}
