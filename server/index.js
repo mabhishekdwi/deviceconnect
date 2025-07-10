@@ -124,6 +124,140 @@ function generateXPath(path) {
     .join('');
 }
 
+function generateXPathStrategies(element) {
+    const strategies = [];
+    if (element.resourceId) {
+        if (element.text) {
+            strategies.push({
+                description: 'Resource ID + text match',
+                xpath: `//*[@resource-id="${element.resourceId}" and @text="${element.text}"]`
+            });
+        }
+        strategies.push({
+            description: 'Resource ID match',
+            xpath: `//*[@resource-id="${element.resourceId}"]`
+        });
+        if (element.contentDesc) {
+            strategies.push({
+                description: 'Resource ID + content-desc match',
+                xpath: `//*[@resource-id="${element.resourceId}" and @content-desc="${element.contentDesc}"]`
+            });
+        }
+        if (element.class) {
+            strategies.push({
+                description: 'Element type + resource-id match',
+                xpath: `//${element.class}[@resource-id="${element.resourceId}"]`
+            });
+        }
+    }
+    if (element.text) {
+        strategies.push({
+            description: 'Text match',
+            xpath: `//*[@text="${element.text}"]`
+        });
+        if (element.class) {
+            strategies.push({
+                description: 'Element type + text match',
+                xpath: `//${element.class}[@text="${element.text}"]`
+            });
+        }
+    }
+    if (element.contentDesc) {
+        strategies.push({
+            description: 'Content description match',
+            xpath: `//*[@content-desc="${element.contentDesc}"]`
+        });
+        if (element.class) {
+            strategies.push({
+                description: 'Element type + content-desc match',
+                xpath: `//${element.class}[@content-desc="${element.contentDesc}"]`
+            });
+        }
+    }
+    if (element.class) {
+        strategies.push({
+            description: 'Element type match',
+            xpath: `//${element.class}`
+        });
+    }
+    if (element.bounds) {
+        strategies.push({
+            description: 'Bounds match (use with caution)',
+            xpath: `//*[@bounds="${element.bounds}"]`
+        });
+    }
+    if (element.class && element.resourceId && element.text) {
+        strategies.push({
+            description: 'Class + Resource ID + Text match',
+            xpath: `//${element.class}[@resource-id="${element.resourceId}" and @text="${element.text}"]`
+        });
+    }
+    return strategies;
+}
+
+function generateBestXPath(element) {
+    if (element.resourceId && element.text) {
+        return {
+            description: 'Resource ID + text match',
+            xpath: `//*[@resource-id="${element.resourceId}" and @text="${element.text}"]`
+        };
+    } else if (element.resourceId) {
+        return {
+            description: 'Resource ID match',
+            xpath: `//*[@resource-id="${element.resourceId}"]`
+        };
+    } else if (element.resourceId && element.contentDesc) {
+        return {
+            description: 'Resource ID + content-desc match',
+            xpath: `//*[@resource-id="${element.resourceId}" and @content-desc="${element.contentDesc}"]`
+        };
+    } else if (element.class && element.resourceId) {
+        return {
+            description: 'Element type + resource-id match',
+            xpath: `//${element.class}[@resource-id="${element.resourceId}"]`
+        };
+    } else if (element.text) {
+        return {
+            description: 'Text match',
+            xpath: `//*[@text="${element.text}"]`
+        };
+    } else if (element.class && element.text) {
+        return {
+            description: 'Element type + text match',
+            xpath: `//${element.class}[@text="${element.text}"]`
+        };
+    } else if (element.contentDesc) {
+        return {
+            description: 'Content description match',
+            xpath: `//*[@content-desc="${element.contentDesc}"]`
+        };
+    } else if (element.class && element.contentDesc) {
+        return {
+            description: 'Element type + content-desc match',
+            xpath: `//${element.class}[@content-desc="${element.contentDesc}"]`
+        };
+    } else if (element.class) {
+        return {
+            description: 'Element type match',
+            xpath: `//${element.class}`
+        };
+    } else if (element.bounds) {
+        return {
+            description: 'Bounds match (use with caution)',
+            xpath: `//*[@bounds="${element.bounds}"]`
+        };
+    } else if (element.class && element.resourceId && element.text) {
+        return {
+            description: 'Class + Resource ID + Text match',
+            xpath: `//${element.class}[@resource-id="${element.resourceId}" and @text="${element.text}"]`
+        };
+    }
+    return {
+        description: 'No suitable XPath found',
+        xpath: ''
+    };
+}
+
 // REST API endpoints
 app.get('/api/devices', async (req, res) => {
   try {
@@ -195,8 +329,15 @@ app.post('/api/locator', (req, res) => {
           if (!root) return res.status(500).json({ error: 'No root node in XML' });
           const { node, path } = findNodeAt(root, x, y);
           if (!node) return res.status(404).json({ error: 'No element found at coordinates' });
-          const xpath = generateXPath(path);
-          res.json({ xpath });
+          const element = {
+            resourceId: node.$['resource-id'] || '',
+            text: node.$.text || '',
+            contentDesc: node.$['content-desc'] || '',
+            class: node.$.class || '',
+            bounds: node.$.bounds || ''
+          };
+          const best = generateBestXPath(element);
+          res.json({ bestXPath: best.xpath, description: best.description, element });
         });
       });
     });

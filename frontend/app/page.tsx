@@ -38,7 +38,6 @@ function ScreenshotViewer() {
     const x = Math.round(e.clientX - rect.left);
     const y = Math.round(e.clientY - rect.top);
     setXpaths(prev => [...prev, 'Locating...']);
-    const idx = xpaths.length;
     try {
       const res = await fetch('http://localhost:3001/api/locator', {
         method: 'POST',
@@ -46,9 +45,19 @@ function ScreenshotViewer() {
         body: JSON.stringify({ x, y }),
       });
       const data = await res.json();
-      setXpaths(prev => prev.map((xp, i) => i === idx ? (data.xpath || 'No element found at this position.') : xp));
+      setXpaths(prev => {
+        const updated = [...prev];
+        updated[updated.length - 1] = data.bestXPath
+          ? data.bestXPath
+          : 'No element found at this position.';
+        return updated;
+      });
     } catch (err) {
-      setXpaths(prev => prev.map((xp, i) => i === idx ? 'Error locating element.' : xp));
+      setXpaths(prev => {
+        const updated = [...prev];
+        updated[updated.length - 1] = 'Error locating element.';
+        return updated;
+      });
     }
   };
 
